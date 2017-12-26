@@ -1,5 +1,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+# More images can be found here: https://github.com/jupyter/docker-stacks
 FROM jupyter/minimal-notebook
 
 LABEL maintainer="Antoine Dao"
