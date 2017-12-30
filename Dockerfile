@@ -70,8 +70,6 @@ RUN cd /tmp && \
 
 # Add repository notebooks into the joyvan home directory
 COPY Notebooks/ $HOME
-RUN cd $HOME \
-    && git clone https://github.com/barbagroup/CFDPython
 
 # Import matplotlib the first time to build the font cache.
 ENV XDG_CACHE_HOME /home/$NB_USER/.cache/
