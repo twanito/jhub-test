@@ -1,10 +1,9 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 # More images can be found here: https://github.com/jupyter/docker-stacks
-FROM jupyter/datascience-notebook
+FROM jupyter/scipy-notebook:82b978b3ceeb
 
-# commit has of last python 2 kernel in datascience-notebook:82b978b3ceeb
-# want to see if python 2 is adding weight of if it's just the datascience-notebook or maybe the old version
+# Extra weight comes from datascience set up rather than python 2 I reckon
 
 LABEL maintainer="Antoine Dao"
 
