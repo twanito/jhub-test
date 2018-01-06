@@ -66,3 +66,5 @@ RUN cd $HOME \
     && git clone https://github.com/barbagroup/CFDPython
 
 USER $NB_USER
+
+CMD ["git clone https://github.com/tirthajyoti/PythonMachineLearning /home/jovyan && start-notebook.sh"]
