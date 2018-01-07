@@ -10,6 +10,8 @@ USER root
 # Scipy notebook version :82b978b3ceeb is not configured for the correct jupyter version.
 # Seems better to install python 2.7 kernel manually below to ensure freshest jupyter every time.
 
+USER $NB_USER
+
 # Install Python 2 packages
 # Remove pyqt and qt pulled in for matplotlib since we're only ever going to
 # use notebook-friendly backends in these images
@@ -59,11 +61,6 @@ RUN pip install kernda --no-cache && \
     $CONDA_DIR/envs/python2/bin/python -m ipykernel install && \
     kernda -o -y /usr/local/share/jupyter/kernels/python2/kernel.json && \
     pip uninstall kernda -y
-
-# Add repository notebooks into the joyvan home directory
-COPY Notebooks/ $HOME
-RUN cd $HOME \
-    && git clone https://github.com/barbagroup/CFDPython
 
 USER $NB_USER
 
