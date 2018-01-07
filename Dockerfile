@@ -1,27 +1,24 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 # More images can be found here: https://github.com/jupyter/docker-stacks
-FROM jupyter/minimal-notebook
+FROM jupyter/scipy-notebook
 
 LABEL maintainer="Antoine Dao"
 
 USER root
 
-# libav-tools for matplotlib anim
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends libav-tools && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -r $HOME/work
+# Scipy notebook version :82b978b3ceeb is not configured for the correct jupyter version.
+# Seems better to install python 2.7 kernel manually below to ensure freshest jupyter every time.
 
 USER $NB_USER
 
-# Install Python 3 packages
+# Install Python 2 packages
 # Remove pyqt and qt pulled in for matplotlib since we're only ever going to
 # use notebook-friendly backends in these images
-RUN conda install --quiet --yes \
+RUN conda create --quiet --yes -p $CONDA_DIR/envs/python2 python=2.7 \
     'nomkl' \
-    'ipywidgets=7.0*' \
+    'ipython=5.3*' \
+    'ipywidgets=6.0*' \
     'pandas=0.19*' \
     'numexpr=2.6*' \
     'matplotlib=2.0*' \
@@ -37,45 +34,34 @@ RUN conda install --quiet --yes \
     'dill=0.2*' \
     'numba=0.31*' \
     'bokeh=0.12*' \
-    'sqlalchemy=1.1*' \
     'hdf5=1.8.17' \
     'h5py=2.6*' \
+    'sqlalchemy=1.1*' \
+    'pyzmq' \
     'vincent=0.4.*' \
     'beautifulsoup4=4.5.*' \
-    'protobuf=3.*' \
-    'xlrd'  && \
-    conda remove --quiet --yes --force qt pyqt && \
-    conda clean -tipsy && \
-    # Activate ipywidgets extension in the environment that runs the notebook server
-    jupyter nbextension enable --py widgetsnbextension --sys-prefix && \
-    # Also activate ipywidgets extension for JupyterLab
-    jupyter labextension install @jupyter-widgets/jupyterlab-manager && \
-    npm cache clean && \
-    rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
-    fix-permissions $CONDA_DIR
-
-# Install facets which does not have a pip or conda package at the moment
-RUN cd /tmp && \
-    git clone https://github.com/PAIR-code/facets.git && \
-    cd facets && \
-    jupyter nbextension install facets-dist/ --sys-prefix && \
-    rm -rf facets && \
-    fix-permissions $CONDA_DIR
-
-# Copy requirements.txt into container and install packages
-COPY requirements.txt /tmp/
-RUN cd /tmp && \
-    pip install -r requirements.txt && \
-    fix-permissions $CONDA_DIR
-
-# Add repository notebooks into the joyvan home directory
-COPY Notebooks/ $HOME
-RUN cd $HOME \
-    && git clone https://github.com/barbagroup/CFDPython
+    'xlrd' && \
+    conda remove -n python2 --quiet --yes --force qt pyqt && \
+    conda clean -tipsy
+# Add shortcuts to distinguish pip for python2 and python3 envs
+RUN ln -s $CONDA_DIR/envs/python2/bin/pip $CONDA_DIR/bin/pip2 && \
+    ln -s $CONDA_DIR/bin/pip $CONDA_DIR/bin/pip3
 
 # Import matplotlib the first time to build the font cache.
 ENV XDG_CACHE_HOME /home/$NB_USER/.cache/
-RUN MPLBACKEND=Agg python -c "import matplotlib.pyplot" && \
-    fix-permissions /home/$NB_USER
+RUN MPLBACKEND=Agg $CONDA_DIR/envs/python2/bin/python -c "import matplotlib.pyplot"
+
+USER root
+
+# Install Python 2 kernel spec globally to avoid permission problems when NB_UID
+# switching at runtime and to allow the notebook server running out of the root
+# environment to find it. Also, activate the python2 environment upon kernel
+# launch.
+RUN pip install kernda --no-cache && \
+    $CONDA_DIR/envs/python2/bin/python -m ipykernel install && \
+    kernda -o -y /usr/local/share/jupyter/kernels/python2/kernel.json && \
+    pip uninstall kernda -y
 
 USER $NB_USER
+
+CMD ["git clone https://github.com/tirthajyoti/PythonMachineLearning /home/jovyan && start-notebook.sh"]
