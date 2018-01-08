@@ -64,4 +64,6 @@ RUN pip install kernda --no-cache && \
 
 USER $NB_USER
 
+COPY Notebooks/. $HOME/
+
 CMD ["git clone https://github.com/tirthajyoti/PythonMachineLearning /home/jovyan && start-notebook.sh"]
